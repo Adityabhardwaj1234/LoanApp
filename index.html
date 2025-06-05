@@ -232,7 +232,7 @@
     }
 
     .pdf-content-viewer {
-        display: none; /* Hidden by default */
+        /* This is for the content that will be converted to PDF */
         border: 1px solid #E5E7EB;
         padding: 1rem;
         background-color: #F9FAFB;
@@ -503,35 +503,59 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js"; // Added getAnalytics import
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, query, onSnapshot, doc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Global variables for Firebase services
-    let app, auth, db;
+    let app, analytics, auth, db; // Added analytics variable
     let currentUserId = null;
+    let firebaseReady = false; // Flag to track Firebase initialization readiness
+
+    // Use the specific firebaseConfig provided by the user
+    const firebaseConfig = {
+      apiKey: "AIzaSyBIIjb6cX-li0NghqRtZ0lzRE2IO4v4MoQ",
+      authDomain: "loanappapi.firebaseapp.com",
+      databaseURL: "https://loanappapi-default-rtdb.firebaseio.com",
+      projectId: "loanappapi",
+      storageBucket: "loanappapi.firebasestorage.app",
+      messagingSenderId: "879738907563",
+      appId: "1:879738907563:web:05d15179b6a97a1f0140ee",
+      measurementId: "G-NJTEPTQ27V"
+    };
+
+    // Use the Canvas environment's __app_id for Firestore path consistency with security rules
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    // The initialAuthToken is provided by the Canvas environment for custom token sign-in
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-    // Initialize Firebase and set up authentication
+    /**
+     * Initializes Firebase services (App, Auth, Firestore, Analytics).
+     * This function ensures all necessary Firebase SDKs are ready before use.
+     */
     function initializeFirebase() {
       if (!app) { // Initialize only once
         app = initializeApp(firebaseConfig);
+        analytics = getAnalytics(app); // Initialize Analytics
         auth = getAuth(app);
         db = getFirestore(app);
+        firebaseReady = true; // Mark Firebase as ready
 
+        // Subscribe to auth state changes to set currentUserId and react to login status
         onAuthStateChanged(auth, async (user) => {
           if (user) {
             currentUserId = user.uid;
             console.log("Firebase authenticated. User ID:", currentUserId);
-            // If already logged in, show applications, otherwise, login form is shown by showApplications
-            if (document.getElementById('applications-viewer').style.display === 'block') {
+            // If the applications viewer is currently intended to be visible (i.e., staff logged in),
+            // then load applications.
+            if (document.getElementById('applications-section').style.display === 'block' &&
+                document.getElementById('applications-viewer').style.display === 'block') {
                 loadApplications();
             }
           } else {
             currentUserId = null; // Clear user ID if logged out
             console.log("Firebase auth state changed: No user.");
-            // Try anonymous sign-in if no custom token is available
+            // Attempt anonymous sign-in if no custom token is available
             try {
                 if (!initialAuthToken) {
                     await signInAnonymously(auth);
@@ -539,16 +563,16 @@
                 }
             } catch (error) {
                 console.error('Error during anonymous sign-in:', error.message);
-                showMessage('Error authenticating: ' + error.message, 'error');
+                showMessage('Error authenticating anonymously: ' + error.message, 'error');
             }
           }
         });
 
-        // Attempt custom token sign-in if available
+        // Attempt custom token sign-in using the Canvas provided token if available
         if (initialAuthToken) {
             signInWithCustomToken(auth, initialAuthToken).catch((error) => {
                 console.error("Error signing in with custom token:", error);
-                showMessage("Failed to sign in automatically. Please log in manually.", "error");
+                showMessage("Failed to sign in automatically. Please log in manually (staff login).", "error");
             });
         }
       }
@@ -556,6 +580,12 @@
 
     // Call initializeFirebase when the window loads to ensure Firebase is ready
     window.onload = initializeFirebase;
+
+    // Initial display logic: show the form section by default on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('main-content').style.display = 'block'; // Ensure main content is visible
+        window.showForm(); // Show the form section initially
+    });
 
     /**
      * Shows a message to the user.
@@ -588,19 +618,30 @@
     }
 
     /**
+     * Helper function to wait for Firebase to be ready.
+     * @returns {Promise<void>} A promise that resolves when Firebase is ready.
+     */
+    async function waitForFirebaseReady() {
+        while (!firebaseReady || !db || !auth) {
+            console.log("Waiting for Firebase to be fully initialized...");
+            await new Promise(resolve => setTimeout(resolve, 50)); // Wait 50ms
+        }
+    }
+
+    /**
      * Generates the next 10-digit loan application number.
+     * Waits for Firebase to be ready.
      * @returns {Promise<string>} - A promise that resolves with the next 10-digit loan number.
      */
     async function getNextLoanNumber() {
-      if (!db) {
-        console.error("Firestore not initialized.");
-        return '0000000000'; // Fallback
-      }
+      await waitForFirebaseReady(); // Ensure Firebase is ready
+
       try {
         const snapshot = await getDocs(collection(db, `artifacts/${appId}/public/data/loanApplications`));
         return String(snapshot.size + 1).padStart(10, '0');
       } catch (error) {
         console.error("Error getting next loan number:", error);
+        showMessage("Could not generate loan code. Please refresh or check console.", "error");
         return '0000000000'; // Fallback in case of error
       }
     }
@@ -612,7 +653,7 @@
       document.getElementById('form-section').style.display = 'block';
       document.getElementById('applications-section').style.display = 'none';
       document.getElementById('applications-viewer').style.display = 'none';
-      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('login-section').style.display = 'none'; // Ensure login is hidden when applying
 
       const loanCodeDisplay = document.getElementById('loan-code-display');
       if (loanCodeDisplay) {
@@ -650,8 +691,7 @@
       document.getElementById('applications-section').style.display = 'block';
 
       // Check if user is "authenticated" (i.e., successfully logged in via handleLogin)
-      // For this example, we assume if currentUserId is set, they are authenticated via Firebase
-      // but staff login is a separate layer.
+      // For this example, we assume if applications-viewer is visible, they are logged in.
       const isLoggedIn = document.getElementById('applications-viewer').style.display === 'block';
 
       if (isLoggedIn) {
@@ -666,15 +706,25 @@
 
     /**
      * Handles the submission of the loan application form.
+     * Waits for Firebase and authentication to be ready.
      * @param {Event} event - The form submission event.
      */
     window.submitForm = async (event) => {
       event.preventDefault();
 
-      if (!db || !auth || !auth.currentUser) {
-        showMessage('Firebase not ready or user not authenticated. Please try again.', 'error');
-        console.error("Firebase or Auth not ready.");
-        return;
+      await waitForFirebaseReady(); // Ensure Firebase is ready
+      // Also ensure a user is authenticated (either anonymously by Canvas or staff login)
+      if (!auth.currentUser) {
+        showMessage('Authentication in progress. Please wait a moment.', 'error');
+        // Optionally, wait for current user to be set if not immediately available
+        await new Promise(resolve => {
+            const unsubscribe = onAuthStateChanged(auth, user => {
+                if (user) {
+                    unsubscribe();
+                    resolve();
+                }
+            });
+        });
       }
 
       const form = event.target;
@@ -683,6 +733,11 @@
 
       try {
         const loanCode = document.getElementById('loan-code-display').textContent;
+        // Prevent submission if the loan code is still "Loading..." or "Generating..."
+        if (loanCode === 'Loading...' || loanCode === 'Generating...') {
+             showMessage('Application code is still generating. Please wait a moment.', 'error');
+             return;
+        }
         data.loan_reference_number = loanCode; // Use the displayed code
         data.submittedBy = auth.currentUser.uid;
         data.submissionDate = new Date().toISOString();
@@ -691,7 +746,7 @@
         
         showMessage(`Application submitted successfully! Reference Number: ${data.loan_reference_number}`, 'success');
         form.reset();
-        // Generate new loan code for next application
+        // Generate new loan code for next application immediately after submission
         document.getElementById('loan-code-display').textContent = 'Generating...';
         const nextCode = await getNextLoanNumber();
         document.getElementById('loan-code-display').textContent = nextCode;
@@ -714,10 +769,8 @@
             return;
         }
 
-        if (!db) {
-            showMessage('Firestore not initialized. Cannot delete.', 'error');
-            return;
-        }
+        await waitForFirebaseReady(); // Ensure Firebase is ready
+
         try {
             await deleteDoc(doc(db, `artifacts/${appId}/public/data/loanApplications`, docId));
             showMessage(`Application ${loanRefNumber} deleted successfully!`, 'success');
@@ -730,17 +783,14 @@
 
     /**
      * Loads and displays submitted applications from Firestore.
+     * Waits for Firebase to be ready.
      */
     async function loadApplications() {
-      if (!db) {
-        console.error("Firestore not initialized. Cannot load applications.");
-        return;
-      }
+      await waitForFirebaseReady(); // Ensure Firebase is ready
 
       const applicationsList = document.getElementById('applications-list');
       applicationsList.innerHTML = '<p style="text-align: center; color: #6B7280;">Loading applications...</p>';
 
-      // Modified query to order by loan_reference_number
       const q = query(collection(db, `artifacts/${appId}/public/data/loanApplications`), orderBy('loan_reference_number', 'asc'));
       
       // Use onSnapshot for real-time updates
@@ -833,6 +883,7 @@
             card.appendChild(content);
             
             header.addEventListener('click', () => {
+              // Toggle display for the content section
               content.style.display = content.style.display === 'block' ? 'none' : 'block';
             });
             
@@ -922,14 +973,6 @@
             downloadButton.disabled = false;
         }
     };
-
-    // Initialize the loan application code display when the form is initially shown
-    document.addEventListener('DOMContentLoaded', () => {
-        // Only show form if main-content is visible (i.e. not immediately showing login)
-        if (document.getElementById('main-content').style.display === 'block') {
-            window.showForm();
-        }
-    });
 
   </script>
   
