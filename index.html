@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FinanceFlow - Business Loan Application Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="encryption.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        get,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBIIjb6cX-li0NghqRtZ0lzRE2IO4v4MoQ",
+        authDomain: "loanappapi.firebaseapp.com",
+        databaseURL: "https://loanappapi-default-rtdb.firebaseio.com",
+        projectId: "loanappapi",
+        storageBucket: "loanappapi.firebasestorage.app",
+        messagingSenderId: "879738907563",
+        appId: "1:879738907563:web:05d15179b6a97a1f0140ee",
+        measurementId: "G-NJTEPTQ27V",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+      const analytics = getAnalytics(app);
+
+      // Make database functions available globally
+      window.firebaseDB = database;
+      window.firebaseRef = ref;
+      window.firebaseGet = get;
+    </script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .glass-morphism {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .stat-counter {
+        transition: all 0.3s ease;
+      }
+
+      .loading-stat {
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .floating-card {
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .hero-animation {
+        animation: heroFloat 8s ease-in-out infinite;
+      }
+
+      @keyframes heroFloat {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        25% {
+          transform: translateY(-15px) rotate(1deg);
+        }
+        50% {
+          transform: translateY(-5px) rotate(-1deg);
+        }
+        75% {
+          transform: translateY(-10px) rotate(0.5deg);
+        }
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6);
+      }
+
+      .feature-card {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15);
+      }
+
+      .status-lookup {
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.95),
+          rgba(248, 250, 252, 0.95)
+        );
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      /* Enhanced Mobile Responsiveness */
+      @media (max-width: 768px) {
+        .hero-title {
+          font-size: 3rem !important;
+          line-height: 1.1;
+        }
+        
+        .hero-subtitle {
+          font-size: 1.25rem !important;
+          padding: 0 1rem;
+        }
+
+        .mobile-card-spacing {
+          padding: 1.5rem !important;
+        }
+
+        .mobile-text-sm {
+          font-size: 0.875rem !important;
+        }
+
+        .mobile-grid {
+          grid-template-columns: 1fr !important;
+          gap: 1.5rem !important;
+        }
+
+        .mobile-stats {
+          grid-template-columns: repeat(2, 1fr) !important;
+          gap: 1rem !important;
+        }
+
+        .mobile-button {
+          padding: 0.75rem 1.5rem !important;
+          font-size: 0.875rem !important;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .hero-title {
+          font-size: 2.5rem !important;
+        }
+        
+        .mobile-card-spacing {
+          padding: 1rem !important;
+          margin: 0.5rem !important;
+        }
+
+        .mobile-stats {
+          grid-template-columns: 1fr !important;
+        }
+      }
+
+      /* Security Modal Styles */
+      .security-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+      }
+
+      .security-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- Enhanced Header -->
+    <header class="glass-morphism sticky top-0 z-50 border-b border-white/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <a
+            href="index.html"
+            class="flex items-center space-x-3 text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            <div class="p-2 bg-blue-100 rounded-lg hero-animation">
+              <i data-lucide="building-2" class="h-6 w-6"></i>
+            </div>
+            <span
+              class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+              >FinanceFlow</span
+            >
+          </a>
+
+          <nav class="flex space-x-2 sm:space-x-4">
+            <a href="apply-loan.html">
+              <button
+                class="px-3 py-2 sm:px-6 text-sm font-medium rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl mobile-button"
+              >
+                Apply for Loan
+              </button>
+            </a>
+            <a
+              href="view-applications.html"
+              id="viewApplicationsLink"
+              style="display: none"
+            >
+              <button
+                class="px-3 py-2 sm:px-6 text-sm font-medium rounded-full text-gray-700 hover:bg-white/50 transition-all duration-300 mobile-button"
+              >
+                View Applications
+              </button>
+            </a>
+            <a href="staff-login.html" id="staffLoginLink">
+              <button
+                id="staffLoginBtn"
+                class="px-3 py-2 sm:px-6 text-sm font-medium rounded-full text-gray-700 hover:bg-white/50 transition-all duration-300 mobile-button"
+              >
+                <span id="staffBtnText">Staff Login</span>
+              </button>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- Enhanced Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+      <div class="space-y-8 sm:space-y-12">
+        <!-- Hero Section -->
+        <div class="text-center text-white space-y-4 sm:space-y-6">
+          <div class="hero-animation inline-block">
+            <h1
+              class="hero-title text-4xl sm:text-6xl font-bold mb-4 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent"
+            >
+              Welcome to FinanceFlow
+            </h1>
+          </div>
+          <p class="hero-subtitle text-lg sm:text-2xl text-blue-100 max-w-4xl mx-auto leading-relaxed">
+            🚀 Streamline your business loan applications with our comprehensive
+            platform. Fast, secure, and efficient loan processing for growing
+            businesses.
+          </p>
+        </div>
+
+        <!-- Enhanced Application Status Lookup -->
+        <div class="floating-card max-w-4xl mx-auto">
+          <div class="status-lookup rounded-3xl p-4 sm:p-8 shadow-2xl mobile-card-spacing">
+            <div class="text-center mb-6 sm:mb-8">
+              <div
+                class="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 shadow-lg hero-animation"
+              >
+                <i data-lucide="search" class="h-8 w-8 text-white"></i>
+              </div>
+              <h2
+                class="text-2xl sm:text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"
+              >
+                🔍 Check Your Application Status
+              </h2>
+              <p class="text-gray-600 text-base sm:text-lg mobile-text-sm">
+                Enter your application code to view real-time status updates
+              </p>
+            </div>
+
+            <div class="space-y-4 sm:space-y-6">
+              <div>
+                <label
+                  for="applicationCodeLookup"
+                  class="block text-sm font-bold text-gray-700 mb-3"
+                  >Application Code</label
+                >
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                  <input
+                    type="text"
+                    id="applicationCodeLookup"
+                    placeholder="Enter your application code (e.g., FL170512345678901234)"
+                    class="flex-1 px-4 sm:px-6 py-3 sm:py-4 border-2 border-purple-200 rounded-2xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-200 transition-all text-base sm:text-lg font-mono"
+                  />
+                  <button
+                    id="checkStatusBtn"
+                    class="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-bold hover:shadow-lg transition-all duration-300 text-base sm:text-lg"
+                  >
+                    🔍 Check Status
+                  </button>
+                </div>
+              </div>
+
+              <!-- Enhanced Status Result -->
+              <div
+                id="statusResult"
+                class="hidden rounded-2xl overflow-hidden shadow-lg"
+              >
+                <!-- Status content will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Quick Actions -->
+        <div class="mobile-grid grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+          <div class="feature-card rounded-3xl p-6 sm:p-8 text-center mobile-card-spacing">
+            <div
+              class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mb-6 hero-animation"
+            >
+              <i data-lucide="building-2" class="h-8 w-8 text-white"></i>
+            </div>
+            <h3 class="text-xl sm:text-2xl font-bold mb-4 text-gray-900">
+              💼 Apply for Business Loan
+            </h3>
+            <p class="text-gray-600 mb-6 text-base sm:text-lg leading-relaxed mobile-text-sm">
+              Start your loan application journey with our streamlined,
+              comprehensive form designed for modern businesses
+            </p>
+            <a
+              href="apply-loan.html"
+              class="inline-block btn-primary text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg w-full"
+            >
+              🚀 Start Application
+            </a>
+          </div>
+
+          <div class="feature-card rounded-3xl p-6 sm:p-8 text-center mobile-card-spacing">
+            <div
+              class="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center mb-6 hero-animation"
+            >
+              <i data-lucide="shield-check" class="h-8 w-8 text-white"></i>
+            </div>
+            <h3 class="text-xl sm:text-2xl font-bold mb-4 text-gray-900">
+              🔐 Secure Application Process
+            </h3>
+            <p class="text-gray-600 mb-6 text-base sm:text-lg leading-relaxed mobile-text-sm">
+              Your data is protected with enterprise-grade security and
+              real-time cloud synchronization
+            </p>
+            <button
+              id="securityInfoBtn"
+              class="border-2 border-green-500 text-green-600 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg w-full hover:bg-green-50 transition-all duration-300"
+            >
+              🛡️ Safety & Security Details
+            </button>
+          </div>
+        </div>
+
+        <!-- Enhanced Real-time Statistics -->
+        <div class="floating-card glass-morphism rounded-3xl p-6 sm:p-8 shadow-2xl mobile-card-spacing">
+          <h2
+            class="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+          >
+            📊 Live Platform Statistics
+          </h2>
+          <div class="mobile-stats grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            <div
+              class="text-center p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200"
+            >
+              <div
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4"
+              >
+                <i data-lucide="file-text" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></i>
+              </div>
+              <div
+                id="totalApplications"
+                class="text-2xl sm:text-3xl font-bold text-blue-600 stat-counter loading-stat"
+              >
+                --
+              </div>
+              <div class="text-xs sm:text-sm text-blue-700 font-semibold mobile-text-sm">
+                Total Applications
+              </div>
+            </div>
+            <div
+              class="text-center p-4 sm:p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200"
+            >
+              <div
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4"
+              >
+                <i data-lucide="check-circle" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></i>
+              </div>
+              <div
+                id="approvedApplications"
+                class="text-2xl sm:text-3xl font-bold text-green-600 stat-counter loading-stat"
+              >
+                --
+              </div>
+              <div class="text-xs sm:text-sm text-green-700 font-semibold mobile-text-sm">Approved</div>
+            </div>
+            <div
+              class="text-center p-4 sm:p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200"
+            >
+              <div
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4"
+              >
+                <i data-lucide="clock" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></i>
+              </div>
+              <div
+                id="pendingApplications"
+                class="text-2xl sm:text-3xl font-bold text-yellow-600 stat-counter loading-stat"
+              >
+                --
+              </div>
+              <div class="text-xs sm:text-sm text-yellow-700 font-semibold mobile-text-sm">Pending</div>
+            </div>
+            <div
+              class="text-center p-4 sm:p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200"
+            >
+              <div
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4"
+              >
+                <i data-lucide="star" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></i>
+              </div>
+              <div
+                id="starredApplications"
+                class="text-2xl sm:text-3xl font-bold text-purple-600 stat-counter loading-stat"
+              >
+                --
+              </div>
+              <div class="text-xs sm:text-sm text-purple-700 font-semibold mobile-text-sm">Starred</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Recent Applications Preview - Only show when logged in -->
+        <div id="recentApplicationsSection" class="floating-card glass-morphism rounded-3xl p-6 sm:p-8 shadow-2xl mobile-card-spacing" style="display: none">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0">
+            <h2
+              class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            >
+              📋 Recent Applications
+            </h2>
+            <a
+              href="view-applications.html"
+              id="viewAllLink"
+              class="text-blue-600 hover:text-blue-700 font-semibold text-base sm:text-lg"
+              style="display: none"
+            >
+              View All →
+            </a>
+          </div>
+          <div id="recentApplications" class="space-y-4">
+            <div class="text-center py-8 sm:py-12 text-gray-500">
+              <div
+                class="inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mb-4"
+              ></div>
+              <p class="text-base sm:text-lg">Loading recent applications...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Features Section -->
+        <div class="floating-card glass-morphism rounded-3xl p-8 sm:p-12 shadow-2xl mobile-card-spacing">
+          <h2
+            class="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+          >
+            ✨ Why Choose FinanceFlow?
+          </h2>
+          <div class="mobile-grid grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+            <div class="text-center">
+              <div
+                class="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 hero-animation"
+              >
+                <i data-lucide="clock" class="h-8 sm:h-10 w-8 sm:w-10 text-white"></i>
+              </div>
+              <h3 class="text-xl sm:text-2xl font-bold mb-4 text-gray-900">
+                ⚡ Fast Processing
+              </h3>
+              <p class="text-gray-600 text-base sm:text-lg leading-relaxed mobile-text-sm">
+                Get your loan applications processed in record time with our
+                AI-powered streamlined workflow and automated verification
+                system
+              </p>
+            </div>
+            <div class="text-center">
+              <div
+                class="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 hero-animation"
+              >
+                <i data-lucide="shield-check" class="h-8 sm:h-10 w-8 sm:w-10 text-white"></i>
+              </div>
+              <h3 class="text-xl sm:text-2xl font-bold mb-4 text-gray-900">
+                🛡️ Secure & Reliable
+              </h3>
+              <p class="text-gray-600 text-base sm:text-lg leading-relaxed mobile-text-sm">
+                Your sensitive financial data is protected with military-grade
+                encryption, secure cloud storage, and 99.9% uptime guarantee
+              </p>
+            </div>
+            <div class="text-center">
+              <div
+                class="w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 hero-animation"
+              >
+                <i data-lucide="users" class="h-8 sm:h-10 w-8 sm:w-10 text-white"></i>
+              </div>
+              <h3 class="text-xl sm:text-2xl font-bold mb-4 text-gray-900">
+                👥 Expert Support
+              </h3>
+              <p class="text-gray-600 text-base sm:text-lg leading-relaxed mobile-text-sm">
+                Access our dedicated team of loan specialists and financial
+                advisors available 24/7 to guide you through every step
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Security Information Modal -->
+    <div id="securityModal" class="security-modal">
+      <div
+        class="glass-morphism rounded-3xl shadow-2xl max-w-lg w-full mx-4 p-6 sm:p-8 text-center"
+      >
+        <div class="animate-bounce mb-6">
+          <div
+            class="mx-auto w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg"
+          >
+            <i data-lucide="shield-check" class="h-10 w-10 text-white"></i>
+          </div>
+        </div>
+        <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+          🛡️ Advanced Security & Safety Features
+        </h3>
+        <div class="text-left space-y-4 mb-6">
+          <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+            <div class="flex items-center mb-2">
+              <i data-lucide="lock" class="h-5 w-5 text-green-600 mr-2"></i>
+              <span class="font-bold text-green-800">End-to-End Encryption</span>
+            </div>
+            <p class="text-sm text-green-700">All sensitive data is encrypted before transmission and storage using advanced cryptographic algorithms.</p>
+          </div>
+          
+          <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div class="flex items-center mb-2">
+              <i data-lucide="server" class="h-5 w-5 text-blue-600 mr-2"></i>
+              <span class="font-bold text-blue-800">Secure Cloud Storage</span>
+            </div>
+            <p class="text-sm text-blue-700">Your application data is stored in enterprise-grade secure servers with 99.9% uptime guarantee.</p>
+          </div>
+          
+          <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+            <div class="flex items-center mb-2">
+              <i data-lucide="eye-off" class="h-5 w-5 text-purple-600 mr-2"></i>
+              <span class="font-bold text-purple-800">Privacy Protection</span>
+            </div>
+            <p class="text-sm text-purple-700">Personal and financial information is accessible only to authorized personnel and never shared with third parties.</p>
+          </div>
+          
+          <div class="bg-orange-50 rounded-xl p-4 border border-orange-200">
+            <div class="flex items-center mb-2">
+              <i data-lucide="clock" class="h-5 w-5 text-orange-600 mr-2"></i>
+              <span class="font-bold text-orange-800">Real-time Monitoring</span>
+            </div>
+            <p class="text-sm text-orange-700">24/7 security monitoring ensures immediate detection and response to any security incidents.</p>
+          </div>
+          
+          <div class="bg-red-50 rounded-xl p-4 border border-red-200">
+            <div class="flex items-center mb-2">
+              <i data-lucide="check-circle" class="h-5 w-5 text-red-600 mr-2"></i>
+              <span class="font-bold text-red-800">Compliance Standards</span>
+            </div>
+            <p class="text-sm text-red-700">Fully compliant with banking security standards, GDPR, and financial data protection regulations.</p>
+          </div>
+        </div>
+        
+        <button
+          id="closeSecurityModal"
+          class="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+        >
+          ✓ Got it, Thanks!
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Initialize encryption utility
+      let crypto;
+      
+      // Initialize Lucide icons
+      lucide.createIcons();
+
+      // Check if staff is logged in and show/hide navigation accordingly
+      function updateLoginState() {
+        const isStaffLoggedIn = localStorage.getItem("staffLoggedIn") === "true";
+        const viewApplicationsLink = document.getElementById("viewApplicationsLink");
+        const staffBtnText = document.getElementById("staffBtnText");
+        const staffLoginLink = document.getElementById("staffLoginLink");
+        const recentApplicationsSection = document.getElementById("recentApplicationsSection");
+        const viewAllLink = document.getElementById("viewAllLink");
+        
+        if (isStaffLoggedIn) {
+          viewApplicationsLink.style.display = "block";
+          viewAllLink.style.display = "block";
+          recentApplicationsSection.style.display = "block";
+          staffBtnText.textContent = "✅ Logged In";
+          
+          // Change the staff login link to go to view applications when logged in
+          staffLoginLink.href = "view-applications.html";
+        } else {
+          viewApplicationsLink.style.display = "none";
+          viewAllLink.style.display = "none";
+          recentApplicationsSection.style.display = "none";
+          staffBtnText.textContent = "Staff Login";
+          
+          // Keep staff login link pointing to staff login page when not logged in
+          staffLoginLink.href = "staff-login.html";
+        }
+      }
+
+      // Load real-time statistics on page load
+      window.addEventListener("load", function () {
+        crypto = new FinanceFlowCrypto();
+        updateLoginState();
+        loadStatistics();
+        loadRecentApplications();
+        setupStatusLookup();
+        setupSecurityModal();
+      });
+
+      function setupSecurityModal() {
+        document
+          .getElementById("securityInfoBtn")
+          .addEventListener("click", function () {
+            document.getElementById("securityModal").classList.add("show");
+          });
+
+        document
+          .getElementById("closeSecurityModal")
+          .addEventListener("click", function () {
+            document.getElementById("securityModal").classList.remove("show");
+          });
+
+        // Close modal when clicking outside
+        window.addEventListener("click", function (e) {
+          if (e.target.classList.contains("security-modal")) {
+            e.target.classList.remove("show");
+          }
+        });
+      }
+
+      function setupStatusLookup() {
+        document
+          .getElementById("checkStatusBtn")
+          .addEventListener("click", checkApplicationStatus);
+        document
+          .getElementById("applicationCodeLookup")
+          .addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+              checkApplicationStatus();
+            }
+          });
+      }
+
+      async function checkApplicationStatus() {
+        const applicationCode = document
+          .getElementById("applicationCodeLookup")
+          .value.trim();
+        const resultDiv = document.getElementById("statusResult");
+
+        if (!applicationCode) {
+          alert("📝 Please enter an application code");
+          return;
+        }
+
+        // Show loading
+        resultDiv.innerHTML = `
+                <div class="text-center p-8 bg-blue-50">
+                    <div class="inline-block w-6 h-6 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin mr-3"></div>
+                    <span class="text-blue-700 font-semibold">Checking status...</span>
+                </div>
+            `;
+        resultDiv.classList.remove("hidden");
+
+        try {
+          const applicationRef = window.firebaseRef(
+            window.firebaseDB,
+            `applications/${applicationCode}`,
+          );
+          const snapshot = await window.firebaseGet(applicationRef);
+
+          if (snapshot.exists()) {
+            const encryptedApp = snapshot.val();
+            // Decrypt the application data for display
+            const app = crypto.decryptApplicationData(encryptedApp);
+            
+            resultDiv.innerHTML = `
+                        <div class="p-6 sm:p-8 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200">
+                            <div class="space-y-4 sm:space-y-6">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900">${app.legalName || "Application Found"}</h3>
+                                    ${getEnhancedStatusBadge(app.status)}
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                    <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                        <span class="font-bold text-gray-700">📋 Application Code:</span>
+                                        <div class="font-mono text-blue-600 font-bold text-sm sm:text-base break-all">${app.applicationCode}</div>
+                                    </div>
+                                    <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                        <span class="font-bold text-gray-700">📅 Submitted:</span>
+                                        <div class="text-gray-900 font-semibold">${formatDate(app.submittedAt)}</div>
+                                    </div>
+                                    <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                        <span class="font-bold text-gray-700">💰 Loan Amount:</span>
+                                        <div class="text-green-600 font-bold">${app.loanAmount || "N/A"}</div>
+                                    </div>
+                                    <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                        <span class="font-bold text-gray-700">📞 Phone:</span>
+                                        <div class="text-gray-900 font-semibold">${app.phoneNumber || "N/A"}</div>
+                                    </div>
+                                </div>
+                                ${
+                                  app.status === "approved"
+                                    ? `
+                                    <div class="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-300 rounded-2xl p-4 sm:p-6">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                                                <i data-lucide="check-circle" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xl sm:text-2xl font-bold text-green-800 mb-1">🎉 Congratulations!</div>
+                                                <div class="text-green-700 font-semibold">Your application has been approved for processing.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `
+                                    : app.status === "rejected"
+                                      ? `
+                                    <div class="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 rounded-2xl p-4 sm:p-6">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-500 rounded-full flex items-center justify-center mr-4">
+                                                <i data-lucide="x-circle" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xl sm:text-2xl font-bold text-red-800 mb-1">Application Status</div>
+                                                <div class="text-red-700 font-semibold">We regret to inform you that your application was not approved.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `
+                                      : `
+                                    <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-2xl p-4 sm:p-6">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-full flex items-center justify-center mr-4">
+                                                <i data-lucide="clock" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xl sm:text-2xl font-bold text-yellow-800 mb-1">⏳ Under Review</div>
+                                                <div class="text-yellow-700 font-semibold">Your application is currently being reviewed. We'll contact you soon.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `
+                                }
+                            </div>
+                        </div>
+                    `;
+
+            // Re-initialize Lucide icons
+            lucide.createIcons();
+          } else {
+            resultDiv.innerHTML = `
+                        <div class="p-6 sm:p-8 bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-300 text-center">
+                            <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="alert-circle" class="h-8 w-8 text-white"></i>
+                            </div>
+                            <h3 class="text-xl sm:text-2xl font-bold text-red-800 mb-2">❌ Application Not Found</h3>
+                            <p class="text-red-700 font-semibold">Please check your application code and try again.</p>
+                        </div>
+                    `;
+            lucide.createIcons();
+          }
+        } catch (error) {
+          console.error("Error checking status:", error);
+          resultDiv.innerHTML = `
+                    <div class="p-6 sm:p-8 bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-300 text-center">
+                        <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="alert-triangle" class="h-8 w-8 text-white"></i>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-bold text-red-800 mb-2">⚠️ Error Checking Status</h3>
+                        <p class="text-red-700 font-semibold">Please try again later.</p>
+                    </div>
+                `;
+          lucide.createIcons();
+        }
+      }
+
+      function getEnhancedStatusBadge(status) {
+        switch (status) {
+          case "approved":
+            return '<span class="px-4 sm:px-6 py-2 sm:py-3 text-base sm:text-lg font-bold bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl shadow-lg">✅ Approved</span>';
+          case "rejected":
+            return '<span class="px-4 sm:px-6 py-2 sm:py-3 text-base sm:text-lg font-bold bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl shadow-lg">❌ Rejected</span>';
+          default:
+            return '<span class="px-4 sm:px-6 py-2 sm:py-3 text-base sm:text-lg font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-2xl shadow-lg">⏳ Pending</span>';
+        }
+      }
+
+      async function loadStatistics() {
+        try {
+          const applicationsRef = window.firebaseRef(
+            window.firebaseDB,
+            "applications",
+          );
+          const snapshot = await window.firebaseGet(applicationsRef);
+
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const applications = Object.values(data);
+
+            const total = applications.length;
+            const approved = applications.filter(
+              (app) => app.status === "approved",
+            ).length;
+            const pending = applications.filter(
+              (app) => app.status === "pending",
+            ).length;
+            const starred = applications.filter(
+              (app) => app.starred === true,
+            ).length;
+
+            // Animate counters
+            animateCounter("totalApplications", total);
+            animateCounter("approvedApplications", approved);
+            animateCounter("pendingApplications", pending);
+            animateCounter("starredApplications", starred);
+          } else {
+            setStaticValue("totalApplications", 0);
+            setStaticValue("approvedApplications", 0);
+            setStaticValue("pendingApplications", 0);
+            setStaticValue("starredApplications", 0);
+          }
+        } catch (error) {
+          console.error("Error loading statistics:", error);
+          setStaticValue("totalApplications", "--");
+          setStaticValue("approvedApplications", "--");
+          setStaticValue("pendingApplications", "--");
+          setStaticValue("starredApplications", "--");
+        }
+      }
+
+      async function loadRecentApplications() {
+        // Only load recent applications if staff is logged in
+        if (localStorage.getItem("staffLoggedIn") !== "true") {
+          return;
+        }
+
+        try {
+          const applicationsRef = window.firebaseRef(
+            window.firebaseDB,
+            "applications",
+          );
+          const snapshot = await window.firebaseGet(applicationsRef);
+
+          const container = document.getElementById("recentApplications");
+
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const applications = Object.values(data)
+              .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+              .slice(0, 3);
+
+            if (applications.length > 0) {
+              container.innerHTML = applications
+                .map((encryptedApp) => {
+                  // Decrypt application data for display
+                  const app = crypto.decryptApplicationData(encryptedApp);
+                  return `
+                            <div class="bg-gradient-to-r from-white to-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-all duration-300">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                                    <div class="flex items-center space-x-3 sm:space-x-4">
+                                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="building" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-base sm:text-lg text-gray-900">${app.legalName || "Company Name"}</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 font-mono bg-gray-100 px-2 sm:px-3 py-1 rounded-lg inline-block break-all">${app.applicationCode}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-left sm:text-right">
+                                        <span class="px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-bold ${getStatusClassSmall(app.status)} rounded-xl shadow-sm">
+                                            ${getStatusEmoji(app.status)} ${app.status || "Pending"}
+                                        </span>
+                                        <p class="text-xs sm:text-sm text-gray-500 mt-2 font-medium">${formatDate(app.submittedAt)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                })
+                .join("");
+
+              lucide.createIcons();
+            } else {
+              container.innerHTML =
+                '<p class="text-center text-gray-500 py-8 text-lg">No applications submitted yet</p>';
+            }
+          } else {
+            container.innerHTML =
+              '<p class="text-center text-gray-500 py-8 text-lg">No applications submitted yet</p>';
+          }
+        } catch (error) {
+          console.error("Error loading recent applications:", error);
+          document.getElementById("recentApplications").innerHTML =
+            '<p class="text-center text-red-500 py-8 text-lg">Error loading applications</p>';
+        }
+      }
+
+      function getStatusEmoji(status) {
+        switch (status) {
+          case "approved":
+            return "✅";
+          case "rejected":
+            return "❌";
+          default:
+            return "⏳";
+        }
+      }
+
+      function animateCounter(elementId, targetValue) {
+        const element = document.getElementById(elementId);
+        element.classList.remove("loading-stat");
+
+        let currentValue = 0;
+        const increment = targetValue / 30;
+
+        const timer = setInterval(() => {
+          currentValue += increment;
+          if (currentValue >= targetValue) {
+            element.textContent = targetValue;
+            clearInterval(timer);
+          } else {
+            element.textContent = Math.floor(currentValue);
+          }
+        }, 50);
+      }
+
+      function setStaticValue(elementId, value) {
+        const element = document.getElementById(elementId);
+        element.classList.remove("loading-stat");
+        element.textContent = value;
+      }
+
+      function getStatusClassSmall(status) {
+        switch (status) {
+          case "approved":
+            return "bg-gradient-to-r from-green-500 to-green-600 text-white";
+          case "rejected":
+            return "bg-gradient-to-r from-red-500 to-red-600 text-white";
+          default:
+            return "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white";
+        }
+      }
+
+      function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      // Refresh statistics every 30 seconds
+      setInterval(loadStatistics, 30000);
+    </script>
+  </body>
+</html>

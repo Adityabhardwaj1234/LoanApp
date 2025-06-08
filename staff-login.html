@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Login - FinanceFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBIIjb6cX-li0NghqRtZ0lzRE2IO4v4MoQ",
+        authDomain: "loanappapi.firebaseapp.com",
+        databaseURL: "https://loanappapi-default-rtdb.firebaseio.com",
+        projectId: "loanappapi",
+        storageBucket: "loanappapi.firebasestorage.app",
+        messagingSenderId: "879738907563",
+        appId: "1:879738907563:web:05d15179b6a97a1f0140ee",
+        measurementId: "G-NJTEPTQ27V",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+      const analytics = getAnalytics(app);
+
+      // Make database available globally
+      window.firebaseDB = database;
+    </script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .glass-morphism {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .loader {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .floating-card {
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .form-input {
+        transition: all 0.3s ease;
+        border: 2px solid #e5e7eb;
+      }
+
+      .form-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- Enhanced Header -->
+    <header class="glass-morphism sticky top-0 z-50 border-b border-white/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <a
+            href="index.html"
+            class="flex items-center space-x-3 text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <i data-lucide="building-2" class="h-6 w-6"></i>
+            </div>
+            <span
+              class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+              >FinanceFlow</span
+            >
+          </a>
+
+          <nav class="flex space-x-4">
+            <a href="apply-loan.html">
+              <button
+                class="px-6 py-2 text-sm font-medium rounded-full text-gray-700 hover:bg-white/50 transition-all duration-300"
+              >
+                Apply for Loan
+              </button>
+            </a>
+            <a
+              href="view-applications.html"
+              id="viewApplicationsLink"
+              style="display: none"
+            >
+              <button
+                class="px-6 py-2 text-sm font-medium rounded-full text-gray-700 hover:bg-white/50 transition-all duration-300"
+              >
+                View Applications
+              </button>
+            </a>
+            <a href="staff-login.html">
+              <button
+                class="px-6 py-2 text-sm font-medium rounded-full bg-blue-600 text-white shadow-lg"
+              >
+                Staff Login
+              </button>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- Enhanced Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <!-- Hero Section -->
+      <div class="text-center text-white mb-12">
+        <h1
+          class="text-5xl font-bold mb-4 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent"
+        >
+          🔐 Staff Portal Access
+        </h1>
+        <p class="text-xl text-blue-100">
+          Secure login for authorized personnel
+        </p>
+      </div>
+
+      <div class="max-w-lg mx-auto">
+        <div
+          class="floating-card glass-morphism rounded-3xl shadow-2xl overflow-hidden"
+        >
+          <!-- Card Header -->
+          <div
+            class="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center text-white"
+          >
+            <div
+              class="mx-auto w-16 h-16 bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center mb-6"
+            >
+              <i data-lucide="shield" class="h-8 w-8 text-white"></i>
+            </div>
+            <h2 class="text-3xl font-bold">Staff Authentication</h2>
+            <p class="text-blue-100 mt-2">
+              Access the comprehensive management portal
+            </p>
+          </div>
+
+          <!-- Card Content -->
+          <div class="p-8">
+            <form id="loginForm" class="space-y-6">
+              <div>
+                <label
+                  for="staffId"
+                  class="block text-sm font-bold text-gray-700 mb-3"
+                  >🆔 Staff ID</label
+                >
+                <input
+                  type="text"
+                  id="staffId"
+                  name="staffId"
+                  required
+                  placeholder="Enter your staff ID"
+                  class="form-input w-full px-4 py-4 rounded-xl focus:outline-none text-lg"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="password"
+                  class="block text-sm font-bold text-gray-700 mb-3"
+                  >🔒 Password</label
+                >
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  required
+                  placeholder="Enter your password"
+                  class="form-input w-full px-4 py-4 rounded-xl focus:outline-none text-lg"
+                />
+              </div>
+
+              <div
+                id="errorMessage"
+                class="hidden bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 rounded-xl p-4"
+              >
+                <div class="flex items-center">
+                  <i
+                    data-lucide="alert-circle"
+                    class="h-5 w-5 text-red-600 mr-2"
+                  ></i>
+                  <p class="text-red-700 font-semibold">
+                    ❌ Invalid staff ID or password
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                id="loginBtn"
+                class="btn-primary w-full text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center"
+              >
+                <span id="loginText">🚀 Login to Portal</span>
+              </button>
+            </form>
+
+            <!-- Demo Credentials -->
+            <div
+              class="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200"
+            >
+              <h4
+                class="text-lg font-bold text-gray-900 mb-4 flex items-center"
+              >
+                <i data-lucide="key" class="h-5 w-5 mr-2 text-blue-600"></i>
+                Demo Credentials
+              </h4>
+              <div class="space-y-3">
+                <div
+                  class="flex items-center justify-between bg-white rounded-lg p-3 border"
+                >
+                  <span class="font-semibold text-gray-700">Staff ID:</span>
+                  <span
+                    class="font-mono font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded"
+                    >admin</span
+                  >
+                </div>
+                <div
+                  class="flex items-center justify-between bg-white rounded-lg p-3 border"
+                >
+                  <span class="font-semibold text-gray-700">Password:</span>
+                  <span
+                    class="font-mono font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded"
+                    >password</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Staff Portal Features -->
+            <div
+              class="mt-8 bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200"
+            >
+              <h4
+                class="text-lg font-bold text-gray-900 mb-4 flex items-center"
+              >
+                <i data-lucide="star" class="h-5 w-5 mr-2 text-green-600"></i>
+                Portal Features
+              </h4>
+              <div class="grid grid-cols-1 gap-3">
+                <div class="flex items-center space-x-3">
+                  <div
+                    class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center"
+                  >
+                    <i data-lucide="eye" class="h-4 w-4 text-white"></i>
+                  </div>
+                  <span class="text-gray-700 font-medium"
+                    >View and manage all loan applications</span
+                  >
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div
+                    class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center"
+                  >
+                    <i
+                      data-lucide="check-circle"
+                      class="h-4 w-4 text-white"
+                    ></i>
+                  </div>
+                  <span class="text-gray-700 font-medium"
+                    >Toggle approval status with one click</span
+                  >
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div
+                    class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center"
+                  >
+                    <i data-lucide="download" class="h-4 w-4 text-white"></i>
+                  </div>
+                  <span class="text-gray-700 font-medium"
+                    >Download comprehensive PDF reports</span
+                  >
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div
+                    class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center"
+                  >
+                    <i data-lucide="star" class="h-4 w-4 text-white"></i>
+                  </div>
+                  <span class="text-gray-700 font-medium"
+                    >Star/favorite important applications</span
+                  >
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div
+                    class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center"
+                  >
+                    <i data-lucide="trash-2" class="h-4 w-4 text-white"></i>
+                  </div>
+                  <span class="text-gray-700 font-medium"
+                    >Delete applications with confirmation</span
+                  >
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div
+                    class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center"
+                  >
+                    <i data-lucide="filter" class="h-4 w-4 text-white"></i>
+                  </div>
+                  <span class="text-gray-700 font-medium"
+                    >Advanced filtering and search capabilities</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Initialize Lucide icons
+      lucide.createIcons();
+
+      // Check if staff is logged in and show/hide navigation accordingly
+      const isStaffLoggedIn = localStorage.getItem("staffLoggedIn") === "true";
+      if (isStaffLoggedIn) {
+        document.getElementById("viewApplicationsLink").style.display = "block";
+      }
+
+      // Handle form submission
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const staffId = document.getElementById("staffId").value;
+          const password = document.getElementById("password").value;
+          const loginBtn = document.getElementById("loginBtn");
+          const loginText = document.getElementById("loginText");
+          const errorMessage = document.getElementById("errorMessage");
+
+          // Hide previous error
+          errorMessage.classList.add("hidden");
+
+          // Show loading state
+          loginBtn.disabled = true;
+          loginBtn.classList.add("opacity-75");
+          loginText.innerHTML =
+            '<span class="loader mr-2"></span> 🔄 Authenticating...';
+
+          // Simulate API call
+          setTimeout(function () {
+            if (staffId === "admin" && password === "password") {
+              // Successful login
+              localStorage.setItem("staffLoggedIn", "true");
+              localStorage.setItem("staffId", staffId);
+              localStorage.setItem("staffLoginTime", new Date().toISOString());
+
+              // Show success and redirect
+              loginText.innerHTML = "✅ Login Successful!";
+              setTimeout(() => {
+                window.location.href = "view-applications.html";
+              }, 1000);
+            } else {
+              // Failed login
+              errorMessage.classList.remove("hidden");
+
+              // Reset form state
+              loginBtn.disabled = false;
+              loginBtn.classList.remove("opacity-75");
+              loginText.textContent = "🚀 Login to Portal";
+
+              // Re-initialize icons
+              lucide.createIcons();
+            }
+          }, 1500);
+        });
+
+      // Check if already logged in
+      if (localStorage.getItem("staffLoggedIn") === "true") {
+        const staffId = localStorage.getItem("staffId");
+        const loginTime = localStorage.getItem("staffLoginTime");
+
+        if (staffId && loginTime) {
+          const timeAgo = Math.floor(
+            (new Date() - new Date(loginTime)) / 1000 / 60,
+          ); // minutes ago
+          const confirmed = confirm(
+            `🔐 You are already logged in as ${staffId} (${timeAgo} minutes ago). Go to Applications Management Portal?`,
+          );
+          if (confirmed) {
+            window.location.href = "view-applications.html";
+          }
+        }
+      }
+
+      // Auto-focus on staff ID field
+      document.getElementById("staffId").focus();
+    </script>
+  </body>
+</html>
